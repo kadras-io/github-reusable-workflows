@@ -1,0 +1,29 @@
+name: Package Config Tests
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: "The command to run for testing the package configuration."
+        required: true
+        type: string
+        default: make test-config
+
+jobs:
+  test-config:
+    name: Configuration Tests
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3.1.0
+
+      - name: Set up Carvel
+        uses: vmware-tanzu/carvel-setup-action@v1.1.1
+        with:
+          only: ytt
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run config checks
+        run: ${{ input.command }}

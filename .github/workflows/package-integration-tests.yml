@@ -1,0 +1,40 @@
+name: Package Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: "The command to run for running the package integration tests."
+        required: true
+        type: string
+        default: make test-integration
+
+jobs:
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3.1.0
+
+      - name: Set up Carvel
+        uses: vmware-tanzu/carvel-setup-action@v1.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create k3d cluster
+        run: |
+          # Initialize brew because of https://github.com/actions/runner-images/issues/6283
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install k3d
+          k3d cluster create test-cluster
+
+          # Wait for the generation of a token for the Service Account
+          while [ $(kubectl get configmap kube-root-ca.crt --no-headers | wc -l) -eq 0 ] ; do
+            sleep 3
+          done
+
+      - name: Run integration tests
+        run: ${{ input.command }}
