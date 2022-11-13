@@ -77,11 +77,12 @@ jobs:
 
       - name: Package and publish OCI bundle
         run: |
+          image_tag=$(echo ${{ inputs.version }} | tr + -)
           kctrl package release -y --version ${{ inputs.version }} \
             --chdir package \
             --copy-to ../carvel-artifacts \
             --repo-output ../repo \
-            --tag ${{ inputs.version }}
+            --tag ${image_tag}
       
       - name: Get released OCI image name with digest
         id: image-info
@@ -169,14 +170,16 @@ jobs:
       - name: Extract digest
         run: |
           digest=$(echo ${IMAGE_RELEASE} | cut -d "@" -f2)
+          tag=$(echo ${{ inputs.version }} | tr + -)
           echo "IMAGE_DIGEST=${digest}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${tag}" >> $GITHUB_ENV
 
       - name: Generate provenance
         uses: philips-labs/slsa-provenance-action@v0.7.2
         with:
           command: generate
           subcommand: container
-          arguments: --repository ${{ inputs.registry-server }}/${{ inputs.image }} --tags ${{ inputs.version }} --digest ${{ env.IMAGE_DIGEST }} --output-path ${{ env.PROVENANCE_FILE }}
+          arguments: --repository ${{ inputs.registry-server }}/${{ inputs.image }} --tags ${{ env.IMAGE_TAG }} --digest ${{ env.IMAGE_DIGEST }} --output-path ${{ env.PROVENANCE_FILE }}
         env:
           COSIGN_EXPERIMENTAL: 0
 
