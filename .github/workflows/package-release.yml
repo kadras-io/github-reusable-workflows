@@ -80,7 +80,8 @@ jobs:
           kctrl package release -y --version ${{ inputs.version }} \
             --chdir package \
             --copy-to ../carvel-artifacts \
-            --repo-output ../repo
+            --repo-output ../repo \
+            --tag ${{ inputs.version }}
       
       - name: Get released OCI image name with digest
         id: image-info
@@ -93,9 +94,7 @@ jobs:
       - name: Add additional tags to OCI image
         run: |
           podman pull ${IMAGE_RELEASE}
-          podman tag ${IMAGE_RELEASE} ${{ inputs.registry-server }}/${{ inputs.image }}:${{ inputs.version }}
           podman tag ${IMAGE_RELEASE} ${{ inputs.registry-server }}/${{ inputs.image }}:latest
-          podman push ${{ inputs.registry-server }}/${{ inputs.image }}:${{ inputs.version }}
           podman push ${{ inputs.registry-server }}/${{ inputs.image }}:latest
       
       - name: Create a release
