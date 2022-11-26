@@ -11,10 +11,17 @@ on:
 
 jobs:
   test-integration:
-    name: Integration Tests
+    name: Integration Tests on ${{ matrix.k3s_image }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        k3s_image: [
+          rancher/k3s:v1.24.8-k3s1
+          rancher/k3s:v1.25.4-k3s1
+        ]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3.1.0
@@ -26,12 +33,14 @@ jobs:
 
       - name: Create k3d cluster
         run: |
-          # Initialize brew because of https://github.com/actions/runner-images/issues/6283
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install k3d
-          k3d cluster create test-cluster
+          # Install k3d
+          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          
+          # Create a Kubernetes cluster
+          k3d cluster create test-cluster --image ${{ matrix.k3s_image }}
 
-          # Wait for the generation of a token for the Service Account
+          # Wait for the generation of a token for the Service Account.
+          # It can be removed once support for Kubernetes 1.24 is dropped.
           while [ $(kubectl get configmap kube-root-ca.crt --no-headers | wc -l) -eq 0 ] ; do
             sleep 3
           done
