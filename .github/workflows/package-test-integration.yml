@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         k3s_image: [
-          rancher/k3s:v1.24.8-k3s1
+          rancher/k3s:v1.24.8-k3s1,
           rancher/k3s:v1.25.4-k3s1
         ]
     steps:
