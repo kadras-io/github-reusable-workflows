@@ -94,7 +94,7 @@ jobs:
           image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file})
           echo "IMAGE_RELEASE=${image_release}" >> $GITHUB_ENV
 
-          echo "image_name=$(echo ${image_release} | cut -d':' -f1)" >> $GITHUB_OUTPUT
+          echo "image_name=$(echo ${image_release} | cut -d'@' -f1)" >> $GITHUB_OUTPUT
           echo "image_digest=$(echo ${image_release} | cut -d'@' -f2)" >> $GITHUB_OUTPUT
       
       - name: Add additional tags to OCI image
@@ -150,7 +150,7 @@ jobs:
 
       - name: Sign image
         run: |
-          cosign sign "${IMAGE_NAME}:${IMAGE_DIGEST}"
+          cosign sign "${IMAGE_NAME}@${IMAGE_DIGEST}"
   
   provenance:
     needs: [build,sign]
