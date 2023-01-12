@@ -1,3 +1,3 @@
-# Cloud Native Utils
+# GitHub Reusable Workflows
 
-A collection of utilities to use in cloud native projects.
+A collection of reusable workflows for Kadras projects.
