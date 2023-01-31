@@ -5,7 +5,7 @@ on:
     inputs:
       command:
         description: "The command to run for running the package integration tests."
-        required: true
+        required: false
         type: string
         default: make test-integration
 

@@ -5,7 +5,7 @@ on:
     inputs:
       command:
         description: "The command to run for testing the package configuration."
-        required: true
+        required: false
         type: string
         default: make test-config
 
