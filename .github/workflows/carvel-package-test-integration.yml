@@ -28,10 +28,14 @@ jobs:
         uses: carvel-dev/setup-action@v1.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # See: https://github.com/Homebrew/actions/commit/840f6491759034b559587cf9192e6a3aa81262d3
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@840f6491759034b559587cf9192e6a3aa81262d3
 
       - name: Install kuttl
         run: |
-          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew tap kudobuilder/tap
           brew install kuttl-cli
 
