@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v3.3.0
 
       - name: Set up Carvel
-        uses: carvel-dev/carvel-setup-action@v1.3.0
+        uses: carvel-dev/setup-action@v1.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
