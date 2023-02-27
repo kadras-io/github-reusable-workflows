@@ -28,7 +28,7 @@ jobs:
       # See: https://github.com/Homebrew/actions/commit/251cc053a43110ce4dea3cdb6f038147c82d0257
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@251cc053a43110ce4dea3cdb6f038147c82d0257
+        uses: Homebrew/actions/setup-homebrew@master
 
       - name: Install kubeconform
         run: |
