@@ -25,10 +25,10 @@ jobs:
           only: ytt
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      # See: https://github.com/Homebrew/actions/commit/840f6491759034b559587cf9192e6a3aa81262d3
+      # See: https://github.com/Homebrew/actions/commit/251cc053a43110ce4dea3cdb6f038147c82d0257
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@840f6491759034b559587cf9192e6a3aa81262d3
+        uses: Homebrew/actions/setup-homebrew@251cc053a43110ce4dea3cdb6f038147c82d0257
 
       - name: Install kubeconform
         run: |
