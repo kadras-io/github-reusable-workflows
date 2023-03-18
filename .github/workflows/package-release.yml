@@ -79,6 +79,7 @@ jobs:
         run: |
           image_tag=$(echo ${{ inputs.version }} | tr + -)
           kctrl package release -y --version ${{ inputs.version }} \
+            --build-ytt-validations false \
             --chdir package \
             --copy-to ../carvel-artifacts \
             --repo-output ../repo \
