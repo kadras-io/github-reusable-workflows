@@ -12,7 +12,7 @@ on:
         description: "The Kubernetes version to use for running the package integration tests."
         required: false
         type: string
-        default: v1.26
+        default: v1.28
 
 jobs:
   test-integration:
@@ -22,10 +22,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.1
 
       - name: Set up Carvel
-        uses: carvel-dev/setup-action@v1.3.0
+        uses: carvel-dev/setup-action@v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
