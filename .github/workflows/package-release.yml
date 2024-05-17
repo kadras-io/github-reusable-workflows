@@ -47,7 +47,7 @@ jobs:
       image-digest: ${{ steps.image-info.outputs.image_digest }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.6
 
       - name: Set up Carvel
         uses: carvel-dev/setup-action@v2.0.0
@@ -55,7 +55,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log into container registry
-        uses: redhat-actions/podman-login@v1.6
+        uses: redhat-actions/podman-login@v1.7
         with:
           username: ${{ inputs.registry-username }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -112,14 +112,14 @@ jobs:
                 ./README.md
       
       - name: Upload package.yml artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: ${{ inputs.version }}.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/${{ inputs.version }}.yml
           retention-days: 1
       
       - name: Upload metadata.yml artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: metadata.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml
@@ -137,10 +137,10 @@ jobs:
       IMAGE_DIGEST: ${{ needs.build.outputs.image-digest }}
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@v3.5.0
 
       - name: Log into container registry
-        uses: redhat-actions/podman-login@v1.6
+        uses: redhat-actions/podman-login@v1.7
         with:
           username: ${{ inputs.registry-username }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -156,7 +156,7 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.build.outputs.image-name }}
       digest: ${{ needs.build.outputs.image-digest }}
@@ -174,19 +174,19 @@ jobs:
       PACKAGE_REPO: kadras-packages
     steps:
       - name: Download package.yml artifact
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ inputs.version }}.yml
           path: ./artifacts
       
       - name: Download metadata.yml artifact
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: metadata.yml
           path: ./artifacts
 
       - name: Checkout package repository source code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.6
         with:
           path: kadras-packages
           repository: ${{ github.repository_owner }}/${{ env.PACKAGE_REPO }}
