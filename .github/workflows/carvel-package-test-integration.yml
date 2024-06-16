@@ -22,7 +22,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
 
       - name: Set up Carvel
         uses: carvel-dev/setup-action@v2.0.0
@@ -33,7 +33,7 @@ jobs:
         uses: arduino/setup-task@v2.0.0
       
       - name: Set up Chainsaw
-        uses: kyverno/action-install-chainsaw@v0.2.1
+        uses: kyverno/action-install-chainsaw@v0.2.4
       
       - name: Set up Homebrew
         id: set-up-homebrew

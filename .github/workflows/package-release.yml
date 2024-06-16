@@ -47,7 +47,7 @@ jobs:
       image-digest: ${{ steps.image-info.outputs.image_digest }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
 
       - name: Set up Carvel
         uses: carvel-dev/setup-action@v2.0.0
@@ -186,7 +186,7 @@ jobs:
           path: ./artifacts
 
       - name: Checkout package repository source code
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
         with:
           path: kadras-packages
           repository: ${{ github.repository_owner }}/${{ env.PACKAGE_REPO }}
