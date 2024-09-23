@@ -9,25 +9,28 @@ on:
         type: string
         default: make test-config
 
+permissions:
+  contents: read
+
 jobs:
   test-config:
     name: Configuration Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Set up Carvel
-        uses: carvel-dev/setup-action@v2.0.0
+        uses: carvel-dev/setup-action@47ccf1e203f9789b83ad664384be98880639c3cf # v2.0.1
         with:
           only: ytt
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@00f483c95eacf401cf9f4aa3746964071a747334 # master
 
       - name: Install kubeconform
         run: |

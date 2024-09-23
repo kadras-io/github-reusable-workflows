@@ -34,11 +34,14 @@ on:
         description: "The OCI image version following semantic versioning."
         required: true
         type: string
-      
+
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       packages: write
@@ -47,15 +50,15 @@ jobs:
       image-digest: ${{ steps.image-info.outputs.image_digest }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Set up Carvel
-        uses: carvel-dev/setup-action@v2.0.0
+        uses: carvel-dev/setup-action@47ccf1e203f9789b83ad664384be98880639c3cf # v2.0.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log into container registry
-        uses: redhat-actions/podman-login@v1.7
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
           username: ${{ inputs.registry-username }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -112,14 +115,14 @@ jobs:
                 ./README.md
       
       - name: Upload package.yml artifact
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: ${{ inputs.version }}.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/${{ inputs.version }}.yml
           retention-days: 1
       
       - name: Upload metadata.yml artifact
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: metadata.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml
@@ -127,7 +130,7 @@ jobs:
 
   sign:
     name: Sign
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [build]
     permissions:
       packages: write
@@ -137,10 +140,10 @@ jobs:
       IMAGE_DIGEST: ${{ needs.build.outputs.image-digest }}
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.5.0
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
 
       - name: Log into container registry
-        uses: redhat-actions/podman-login@v1.7
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
           username: ${{ inputs.registry-username }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -166,7 +169,7 @@ jobs:
 
   repo:
     name: Package Repository
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [provenance]
     permissions:
       contents: read
@@ -174,19 +177,19 @@ jobs:
       PACKAGE_REPO: kadras-packages
     steps:
       - name: Download package.yml artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: ${{ inputs.version }}.yml
           path: ./artifacts
       
       - name: Download metadata.yml artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: metadata.yml
           path: ./artifacts
 
       - name: Checkout package repository source code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           path: kadras-packages
           repository: ${{ github.repository_owner }}/${{ env.PACKAGE_REPO }}
