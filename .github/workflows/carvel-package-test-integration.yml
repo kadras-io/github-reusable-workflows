@@ -12,7 +12,7 @@ on:
         description: "The Kubernetes version to use for running the package integration tests."
         required: false
         type: string
-        default: v1.30
+        default: v1.33
 
 permissions:
   contents: read
