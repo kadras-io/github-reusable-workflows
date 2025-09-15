@@ -48,4 +48,6 @@ jobs:
           brew install kuttl-cli
 
       - name: Run integration tests
-        run: K8S_VERSION=${{ inputs.k8s_version }} ${{ inputs.command }}
+        run: ${{ inputs.command }}
+        env:
+          K8S_VERSION: ${{ inputs.k8s_version }}
