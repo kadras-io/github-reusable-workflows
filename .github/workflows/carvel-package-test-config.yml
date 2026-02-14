@@ -1,4 +1,4 @@
-name: Package Config Tests
+name: PAckage Configuration Tests
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
         description: "The command to run for testing the package configuration."
         required: false
         type: string
-        default: make test-config
+        default: task test:config
 
 permissions:
   contents: read
@@ -22,19 +22,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
-      - name: Set up Carvel
-        uses: carvel-dev/setup-action@47ccf1e203f9789b83ad664384be98880639c3cf # v2.0.1
-        with:
-          only: ytt
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Flox
+        uses: flox/install-flox-action@9428713e8d3883274c334b4b95b8830beebd24d2 # v2.3.0
       
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@00f483c95eacf401cf9f4aa3746964071a747334 # master
-
-      - name: Install kubeconform
-        run: |
-          brew install kubeconform
-
-      - name: Run config checks
-        run: ${{ inputs.command }}
+      - name: Run configuration tests
+        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
+        with:
+          command: ${{ inputs.command }}

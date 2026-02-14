@@ -7,12 +7,12 @@ on:
         description: "The command to run for running the package integration tests."
         required: false
         type: string
-        default: make test-integration
+        default: task test:integration
       k8s_version:
         description: "The Kubernetes version to use for running the package integration tests."
         required: false
         type: string
-        default: v1.34
+        default: v1.35
 
 permissions:
   contents: read
@@ -24,30 +24,25 @@ jobs:
     permissions:
       contents: read
     steps:
+      
       - name: Checkout source code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-
-      - name: Set up Carvel
-        uses: carvel-dev/setup-action@47ccf1e203f9789b83ad664384be98880639c3cf # v2.0.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Set up Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
-      
-      - name: Set up Chainsaw
-        uses: kyverno/action-install-chainsaw@f2b47b97dc889c12702113753d713f01ec268de5 # v0.2.12
+      - name: Install Flox
+        uses: flox/install-flox-action@9428713e8d3883274c334b4b95b8830beebd24d2 # v2.3.0
       
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@00f483c95eacf401cf9f4aa3746964071a747334 # master
-
-      - name: Install kuttl
+      
+      - name: Install kctrl
         run: |
-          brew tap kudobuilder/tap
-          brew install kuttl-cli
-
+          brew tap carvel-dev/carvel
+          brew install kctrl
+      
       - name: Run integration tests
-        run: ${{ inputs.command }}
+        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         env:
           K8S_VERSION: ${{ inputs.k8s_version }}
+        with:
+          command: ${{ inputs.command }}
