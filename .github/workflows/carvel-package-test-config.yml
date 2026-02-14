@@ -12,6 +12,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FLOX_DISABLE_METRICS: true
+
 jobs:
   test-config:
     name: Configuration Tests

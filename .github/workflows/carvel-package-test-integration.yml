@@ -17,6 +17,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FLOX_DISABLE_METRICS: true
+
 jobs:
   test-integration:
     name: Integration Tests on ${{ inputs.k8s_version }}
