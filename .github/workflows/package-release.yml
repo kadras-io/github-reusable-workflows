@@ -38,9 +38,6 @@ on:
 permissions:
   contents: read
 
-env:
-  FLOX_DISABLE_METRICS: true
-
 jobs:
   build:
     name: Build
@@ -55,39 +52,42 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
-      - name: Install Flox
-        uses: flox/install-flox-action@9428713e8d3883274c334b4b95b8830beebd24d2 # v2.3.0
+      - name: Set up Carvel
+        uses: carvel-dev/setup-action@47ccf1e203f9789b83ad664384be98880639c3cf # v2.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@00f483c95eacf401cf9f4aa3746964071a747334 # master
-      
-      - name: Install kctrl
-        run: |
-          brew tap carvel-dev/carvel
-          brew install kctrl
+      - name: Log into container registry
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
+        with:
+          username: ${{ inputs.registry-username }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ inputs.registry-server }}
       
       - name: Create k3d cluster
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        with:
-          command: |
-            k3d cluster create test-cluster
-            kubectl wait --for=condition=Ready nodes --all --timeout=5m
-      
-      - name: Package and publish OCI bundle
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        with:
-          command: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ inputs.registry-server }}" \
-              --username "${{ inputs.registry-username }}" \
-              --password-stdin
-            kctrl package release -y --version ${{ inputs.version }} \
-              --build-ytt-validations=false \
-              --chdir package \
-              --copy-to ../carvel-artifacts \
-              --repo-output ../repo \
-              --tag $(echo ${{ inputs.version }} | tr + -)
+        run: |
+          # Install k3d
+          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          
+          # Create a Kubernetes cluster
+          k3d cluster create test-cluster
 
+          # Wait for the generation of a token for the Service Account.
+          # It can be removed once support for Kubernetes 1.24 is dropped.
+          while [ $(kubectl get configmap kube-root-ca.crt --no-headers | wc -l) -eq 0 ] ; do
+            sleep 3
+          done
+
+      - name: Package and publish OCI bundle
+        run: |
+          image_tag=$(echo ${{ inputs.version }} | tr + -)
+          kctrl package release -y --version ${{ inputs.version }} \
+            --build-ytt-validations=false \
+            --chdir package \
+            --copy-to ../carvel-artifacts \
+            --repo-output ../repo \
+            --tag ${image_tag}
+      
       - name: Get released OCI image name with digest
         id: image-info
         run: |
@@ -97,24 +97,22 @@ jobs:
 
           echo "image_name=$(echo ${image_release} | cut -d'@' -f1)" >> $GITHUB_OUTPUT
           echo "image_digest=$(echo ${image_release} | cut -d'@' -f2)" >> $GITHUB_OUTPUT
-
+      
       - name: Add additional tags to OCI image
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        with:
-          command: |
-            podman pull ${IMAGE_RELEASE}
-            podman tag ${IMAGE_RELEASE} ${{ inputs.registry-server }}/${{ inputs.image }}:latest
-            podman push ${{ inputs.registry-server }}/${{ inputs.image }}:latest
-
+        run: |
+          podman pull ${IMAGE_RELEASE}
+          podman tag ${IMAGE_RELEASE} ${{ inputs.registry-server }}/${{ inputs.image }}:latest
+          podman push ${{ inputs.registry-server }}/${{ inputs.image }}:latest
+      
       - name: Create a release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create v${{ inputs.version }} \
-              --generate-notes \
-              ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/package.yml \
-              ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml \
-              ./README.md
+                --generate-notes \
+                ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/package.yml \
+                ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml \
+                ./README.md
       
       - name: Upload package.yml artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -141,15 +139,19 @@ jobs:
       IMAGE_NAME: ${{ needs.build.outputs.image-name }}
       IMAGE_DIGEST: ${{ needs.build.outputs.image-digest }}
     steps:
-      
-      - name: Sign image using Cosign
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+      - name: Log into container registry
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
-          command: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ inputs.registry-server }}" \
-              --username "${{ inputs.registry-username }}" \
-              --password-stdin
-            cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
+          username: ${{ inputs.registry-username }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ inputs.registry-server }}
+
+      - name: Sign image
+        run: |
+          cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
   
   provenance:
     needs: [build,sign]
