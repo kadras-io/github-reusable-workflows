@@ -86,13 +86,12 @@ jobs:
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         with:
           command: |
-            image_tag=$(echo ${{ inputs.version }} | tr + -)
             kctrl package release -y --version ${{ inputs.version }} \
               --build-ytt-validations=false \
               --chdir package \
               --copy-to ../carvel-artifacts \
               --repo-output ../repo \
-              --tag ${image_tag}
+              --tag $(echo ${{ inputs.version }} | tr + -)
       
       - name: Get released OCI image name with digest
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
