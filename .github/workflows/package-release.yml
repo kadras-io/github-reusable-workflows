@@ -67,14 +67,6 @@ jobs:
           brew tap carvel-dev/carvel
           brew install kctrl
       
-      - name: Log into container registry
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        with:
-          command: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ inputs.registry-server }}" \
-              --username "${{ inputs.registry-username }}" \
-              --password-stdin
-      
       - name: Create k3d cluster
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         with:
@@ -86,24 +78,25 @@ jobs:
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         with:
           command: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ inputs.registry-server }}" \
+              --username "${{ inputs.registry-username }}" \
+              --password-stdin
             kctrl package release -y --version ${{ inputs.version }} \
               --build-ytt-validations=false \
               --chdir package \
               --copy-to ../carvel-artifacts \
               --repo-output ../repo \
               --tag $(echo ${{ inputs.version }} | tr + -)
-      
-      - name: Get released OCI image name with digest
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        id: image-info
-        with:
-          command: |
-            package_file=$(find carvel-artifacts/packages -name 'package.yml')
-            image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file})
-            echo "IMAGE_RELEASE=${image_release}" >> $GITHUB_ENV
 
-            echo "image_name=$(echo ${image_release} | cut -d'@' -f1)" >> $GITHUB_OUTPUT
-            echo "image_digest=$(echo ${image_release} | cut -d'@' -f2)" >> $GITHUB_OUTPUT
+      - name: Get released OCI image name with digest
+        id: image-info
+        run: |
+          package_file=$(find carvel-artifacts/packages -name 'package.yml')
+          image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file})
+          echo "IMAGE_RELEASE=${image_release}" >> $GITHUB_ENV
+
+          echo "image_name=$(echo ${image_release} | cut -d'@' -f1)" >> $GITHUB_OUTPUT
+          echo "image_digest=$(echo ${image_release} | cut -d'@' -f2)" >> $GITHUB_OUTPUT
 
       - name: Add additional tags to OCI image
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
@@ -114,16 +107,14 @@ jobs:
             podman push ${{ inputs.registry-server }}/${{ inputs.image }}:latest
 
       - name: Create a release
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          command: |
-            gh release create v${{ inputs.version }} \
-                --generate-notes \
-                ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/package.yml \
-                ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml \
-                ./README.md
+        run: |
+          gh release create v${{ inputs.version }} \
+              --generate-notes \
+              ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/package.yml \
+              ./carvel-artifacts/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml \
+              ./README.md
       
       - name: Upload package.yml artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -150,18 +141,15 @@ jobs:
       IMAGE_NAME: ${{ needs.build.outputs.image-name }}
       IMAGE_DIGEST: ${{ needs.build.outputs.image-digest }}
     steps:
-      - name: Log into container registry
+      
+      - name: Sign image using Cosign
         uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
         with:
           command: |
             echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ inputs.registry-server }}" \
               --username "${{ inputs.registry-username }}" \
               --password-stdin
-      
-      - name: Sign image using Cosign
-        uses: flox/activate-action@410568008895a0f2e09a34bbd9523f8ef1f2d292 # v1.1.0
-        with:
-          command: cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
+            cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
   
   provenance:
     needs: [build,sign]
