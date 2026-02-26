@@ -115,14 +115,14 @@ jobs:
                 ./README.md
       
       - name: Upload package.yml artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ inputs.version }}.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/${{ inputs.version }}.yml
           retention-days: 1
       
       - name: Upload metadata.yml artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: metadata.yml
           path: ./repo/packages/${{ inputs.package-name-slug }}.packages.kadras.io/metadata.yml
