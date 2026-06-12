@@ -19,6 +19,7 @@ permissions:
 
 env:
   FLOX_DISABLE_METRICS: true
+  HOMEBREW_NO_SANDBOX_LINUX: 1
 
 jobs:
   test-integration:
