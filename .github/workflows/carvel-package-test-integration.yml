@@ -37,7 +37,7 @@ jobs:
       
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@00f483c95eacf401cf9f4aa3746964071a747334 # master
+        uses: Homebrew/actions/setup-homebrew@df4b09108a1de9d6f995fe68f302b3f68bd6d2ef # master
       
       - name: Install kctrl
         run: |
