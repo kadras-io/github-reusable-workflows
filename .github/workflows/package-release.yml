@@ -38,6 +38,10 @@ on:
 permissions:
   contents: read
 
+env:
+  FLOX_DISABLE_METRICS: true
+  HOMEBREW_NO_SANDBOX_LINUX: 1
+
 jobs:
   build:
     name: Build
@@ -52,10 +56,18 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Carvel
-        uses: carvel-dev/setup-action@efbf2625e8469080d87175c02690634d4b0ad476 # v2.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Flox
+        uses: flox/install-flox-action@1128abd73431089ab9d871c893b4e72a729354e1 # v2.6.0
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@b35a29a0f83ee8b8ca07b219fc8db3d7bb88ab49 # master
+
+      - name: Install kctrl
+        run: |
+          brew trust carvel-dev/carvel
+          brew tap carvel-dev/carvel
+          brew install kctrl
 
       - name: Log into container registry
         uses: redhat-actions/podman-login@50c2d9a331bb67c8fdab99b86455fad05e2e3252 # v2.0
@@ -65,20 +77,18 @@ jobs:
           registry: ${{ inputs.registry-server }}
       
       - name: Create k3d cluster
+        shell: flox activate -- bash -e {0}
         run: |
-          # Install k3d
-          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-          
           # Create a Kubernetes cluster
           k3d cluster create test-cluster
 
           # Wait for the generation of a token for the Service Account.
-          # It can be removed once support for Kubernetes 1.24 is dropped.
-          while [ $(kubectl get configmap kube-root-ca.crt --no-headers | wc -l) -eq 0 ] ; do
+          until kubectl get configmap kube-root-ca.crt > /dev/null 2>&1 ; do
             sleep 3
           done
 
       - name: Package and publish OCI bundle
+        shell: flox activate -- bash -e {0}
         run: |
           image_tag=$(echo ${{ inputs.version }} | tr + -)
           kctrl package release -y --version ${{ inputs.version }} \
@@ -87,9 +97,10 @@ jobs:
             --copy-to ../carvel-artifacts \
             --repo-output ../repo \
             --tag ${image_tag}
-      
+
       - name: Get released OCI image name with digest
         id: image-info
+        shell: flox activate -- bash -e {0}
         run: |
           package_file=$(find carvel-artifacts/packages -name 'package.yml')
           image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file})
