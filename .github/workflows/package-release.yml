@@ -103,7 +103,8 @@ jobs:
         shell: flox activate -- bash -e {0}
         run: |
           package_file=$(find carvel-artifacts/packages -name 'package.yml')
-          image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file})
+          # Strip any quotes, since some yq implementations emit quoted scalars.
+          image_release=$(yq '.spec.template.spec.fetch[0].imgpkgBundle.image' ${package_file} | tr -d '"')
           echo "IMAGE_RELEASE=${image_release}" >> $GITHUB_ENV
 
           echo "image_name=$(echo ${image_release} | cut -d'@' -f1)" >> $GITHUB_OUTPUT
@@ -111,8 +112,8 @@ jobs:
       
       - name: Add additional tags to OCI image
         run: |
-          podman pull ${IMAGE_RELEASE}
-          podman tag ${IMAGE_RELEASE} ${{ inputs.registry-server }}/${{ inputs.image }}:latest
+          podman pull "${IMAGE_RELEASE}"
+          podman tag "${IMAGE_RELEASE}" ${{ inputs.registry-server }}/${{ inputs.image }}:latest
           podman push ${{ inputs.registry-server }}/${{ inputs.image }}:latest
       
       - name: Create a release
